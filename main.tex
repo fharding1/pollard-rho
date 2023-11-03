@@ -6,7 +6,7 @@
 \usepackage{amsthm}
 \usepackage{color}
 \usepackage{float}
-\usepackage{hyperref}
+\usepackage[colorlinks=true]{hyperref}
 \usepackage{array}
 \usepackage[style=alphabetic,backend=bibtex]{biblatex}
 \addbibresource{refs.bib}
@@ -28,7 +28,7 @@
 \newtheorem{defn}[thm]{Definition}
 \newtheorem{claim}[thm]{Claim}
 
-\title{Pollard's Rho Algorithm for Discrete Logarithm Computation}
+\title{Pollard's Rho Algorithm for Discrete Logarithm Computation \thanks{This report was written for a single CS 406 projects credit and was supervised by Jiayu Xu. I did not end up having quite enough time to perform all of the experiments that I would have liked to, but at least one is given in this report. The source code for my implementation of Pollard's rho algorithm with Teske's 20-adding walk is available at \href{https://github.com/fharding1/pollard-rho}{https://github.com/fharding1/pollard-rho}.}}
 \author{Franklin Harding}
 \date{\today}
 
@@ -211,7 +211,7 @@ This yields the congruence $(0-14)x=(7-2) \pmod {15}$ and we solve for $x=5$. In
 
 We implemented a number of variations on Pollard's rho algorithm in C using the GNU Multiple Precision (\href{https://gmplib.org/}{https://gmplib.org/}) and Permuted Congruential Generator (\href{https://www.pcg-random.org/}{https://www.pcg-random.org/}) libraries for arbitrary-precision math and random number generation respectively. We tested each variation against prime-order subgroups of $\ZZ_p^*$ and groups of points of an elliptic curve over prime-order finite fields (denoted $E(\FF_p)$). For each type of group, we work with group orders between $10^{n-1}$ and $10^n$ for $3 \leq n \leq 13$. 
 
-Teske showed that if the iterating function on a finite group $G$ behaves like a random mapping and her cycle-finding algorithm based on Schnorr and Lenstra's is used, then we expect a match in approximately $1.416\sqrt{|G|}$ iterations. Thus, she used the metric $$L := \frac{\text{\# of iterations until a cycle is found}}{\sqrt{|G|}}$$ to evaluate the performance of her walk functions experimentally. We will do the same.
+Teske showed that if the iterating function on a finite group $G$ behaves like a random mapping and her cycle-finding algorithm based on Schnorr and Lenstra's is used, then we expect a match in approximately $1.416\sqrt{|G|}$ iterations. Thus, she used the metric $$L := \frac{\text{\# of iterations until a cycle is found}}{\sqrt{|G|}}$$ to evaluate the performance of her walk functions experimentally. We will do the same. Our code is available on Github at \href{https://github.com/fharding1/pollard-rho}{https://github.com/fharding1/pollard-rho}.
 
 \subsection{Walk method}
 
@@ -266,7 +266,7 @@ We compared Pollard's original walk method to a Teske 20-adding walk with Floyd'
 
 \section{Conclusion}
 
-Pollard's rho algorithm is known to be one of the fastest and most practical algorithms for computing discrete logarithms, however contemporary implementations take advantage of numerous lesser-known optimizations. Teske came up with new methods of taking random walks in the group called $r$-adding and $r+q$-mixed walks. We implemented Pollard's rho algorithm in C and compared a $20$-adding walk with FNV32 hashing and Floyd's cycle-finding algorithm to Pollard's original rho algorithm with cycle-finding, and showed that Teske's method is significantly faster. Future work would be to study the use of the negation map, other cycle-finding algorithms and hash functions, and the method of distinguished points.
+Pollard's rho algorithm is known to be one of the fastest and most practical algorithms for elliptic-curve DLPs, however contemporary implementations take advantage of numerous lesser-known optimizations. Teske came up with new methods of taking random walks in the group called $r$-adding and $r+q$-mixed walks. We implemented Pollard's rho algorithm in C and compared a $20$-adding walk with FNV32 hashing to Pollard's original rho algorithm, and showed that Teske's method is significantly faster. Future work would be to study the use of the negation map, other cycle-finding algorithms and hash functions, and the method of distinguished points.
 
 \printbibliography
 
