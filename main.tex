@@ -8,7 +8,7 @@
 \usepackage{float}
 \usepackage{hyperref}
 \usepackage{array}
-\usepackage[style=alphabetic]{biblatex}
+\usepackage[style=alphabetic,backend=bibtex]{biblatex}
 \addbibresource{refs.bib}
 
 \newcommand{\ZZ}{\mathbb{Z}}
@@ -263,6 +263,10 @@ We compared Pollard's original walk method to a Teske 20-adding walk with Floyd'
 	Let $G$ be a finite cyclic group, $n \in \NN$, and $M_0, M_1, \ldots, M_{n-1}$ be elements of $G$. Furthermore, let $P$ be a hash function from $G$ to $\ZZ_n$ and $F$ be an iterating function on $G$. A walk $(Y_k)$ with $F$ is called \textbf{$r$-adding} if $F$ is of the form $F(Y) = Y * M_{P(Y)}$ for all $Y \in G$.
 \end{defn}
 \fi
+
+\section{Conclusion}
+
+Pollard's rho algorithm is known to be one of the fastest and most practical algorithms for computing discrete logarithms, however contemporary implementations take advantage of numerous lesser-known optimizations. Teske came up with new methods of taking random walks in the group called $r$-adding and $r+q$-mixed walks. We implemented Pollard's rho algorithm in C and compared a $20$-adding walk with FNV32 hashing and Floyd's cycle-finding algorithm to Pollard's original rho algorithm with cycle-finding, and showed that Teske's method is significantly faster. Future work would be to study the use of the negation map, other cycle-finding algorithms and hash functions, and the method of distinguished points.
 
 \printbibliography
 
