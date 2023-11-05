@@ -40,22 +40,22 @@
 
 Let $G$ be a finite cyclic group for which $g$ is a generator and $h$ is a random group element. The \textit{discrete logarithm problem} (DLP) is to find the smallest non-negative integer $x$ so that $h = g^x$. The existence of an efficient algorithm for solving the DLP would render Diffie-Hellman (DH) key exchange, ElGamal encryption, and various other cryptosystems insecure. In practice, $G$ is typically $\ZZ_p^*$ or the points of an elliptic curve over a finite field of order $p$ ($p$ prime).
 
-Pollard suggested a method for solving DLPs in $\ZZ_p^*$ \cite{Pollard1978} based on his ``rho'' idea initially exploited for factoring \cite{Pollard1975}. The resulting algorithm takes roughly $O(\sqrt{|G|})$ group operations and has negligible space requirements. When combined with the methods of Pohlig and Hellman \cite{Pohlig78}, the run time is reduced to $O(\sqrt{p})$ where $p$ is the largest prime dividing $|G|$.
+Pollard suggested a method for solving DLPs in $\ZZ_p^*$ \cite{Pollard1978} based on his ``rho'' idea initially exploited for factoring \cite{Pollard1975}. The resulting algorithm takes $O(\sqrt{|G|})$ group operations and has negligible space requirements. When combined with the methods of Pohlig and Hellman \cite{Pohlig78}, the run time is reduced to $O(\sqrt{p})$ where $p$ is the largest prime dividing $|G|$.
 
-Shoup demonstrated that generic discrete log algorithms (that succeed with high probability) must perform at least $\Omega(\sqrt{p})$ group operations where $p$ is the largest prime dividing the order of $G$ \cite{Shoup1997}. In other words, Pollard's rho algorithm is essentially the best we can do. While sub-exponential time algorithms exist for $\ZZ_p^*$, Pollard's rho algorithm is still the weapon of choice for elliptic curve DLPs. However, contemporary implementations differ in many ways from Pollard's original rho algorithm. We will discuss these variations and analyze their performance empirically.
+Shoup demonstrated that generic discrete log algorithms (that succeed with high probability) must perform at least $\Omega(\sqrt{p})$ group operations where $p$ is the largest prime dividing the order of $G$ \cite{Shoup1997}. In other words, Pollard's rho algorithm is the best we can do. While sub-exponential time algorithms exist for $\ZZ_p^*$, Pollard's rho algorithm is still the weapon of choice for elliptic curve DLPs. However, contemporary implementations differ in many ways from Pollard's original rho algorithm. We will discuss these variations and analyze their performance empirically.
 
 \section{Preliminaries}
 
-We use $\NN_0$ to the denote the set of non-negative integers, i.e. $\NN \bigcup \{0\}$. For fixed $n \in \NN$, we write $\ZZ_n$ for the group of integers modulo $n$ with multiplication modulo $n$, and $\ZZ_n^{\times}$, denotes the group of units of $\ZZ_n$. We will mostly deal with $\ZZ_p$ where $p$ is prime, in which case $\ZZ_p^{\times}=\ZZ_p^*=\ZZ_p \setminus \{0\}$. When we deal with a generic group $G$, we assume that for all $g,h \in G$ we can efficiently compute $gh$, and represent each element as a unique binary string.
+We use $\NN_0$ to the denote the set of non-negative integers, i.e. $\NN \bigcup \{0\}$. For fixed $n \in \NN$, we write $\ZZ_n$ for the group of integers modulo $n$ with multiplication modulo $n$, and $\ZZ_n^{\times}$, denotes the group of units of $\ZZ_n$. We will mostly deal with $\ZZ_p$ where $p$ is prime, in which case $\ZZ_p^{\times}=\ZZ_p^*=\ZZ_p \setminus \{0\}$. When we deal with a generic group $G$ we assume that for all $g,h \in G$ we can efficiently compute $gh$ and represent each group element as a unique binary string.
 
 \section{Pollard's rho method}
 
 Let $W$ be a finite set and $f: W \to W$ be a mapping. For any $w_0 \in W$, the sequence $w_0, f(w_0), f(f(w_0)), \ldots$ is eventually periodic since $W$ is finite. This idea can be used to solve many computational problems and is referred to as the \textit{rho method}. As a warm up and to introduce some terminology, we will describe Pollard's original rho algorithm for solving the DLP in $\ZZ_p^*$; but first, some motivation.
 
 Let $G$ be a group for which $g$ is a generator and $h$ is an arbitrary element. Recall that the DLP is to find the smallest non-negative integer $x$ so that $h=g^x$. If we have some $a,a',b,b' \in \ZZ$ so that $h^a g^b = h^{a'} g^{b'}$ then we can substitute $h=g^x$ yielding $(g^x)^{a-a'} = g^{b'-b}$ which implies $$x(a-a') \equiv b' - b \pmod{|G|},$$
-and we can easily compute $x$ so long as $a-a'$ is relatively prime to $|G|$. A naive method for solving DLPs based on this idea is to repeatedly randomly sample $a,b \in \ZZ$ and store $h^a g^b$ in a table until you get a collision. However, the space requirements for this method are too significant for the large groups used in modern cryptography. As you might have guessed, one can combine this idea with Pollard's rho method to produce a more practical algorithm---but first we need to address the elephant in the room: \textit{what if $|G|$ has small factors?}
+and we can easily compute $x$ so long as $a-a'$ is relatively prime to $|G|$. A naive method for solving DLPs based on this idea is to repeatedly randomly sample $a,b \in \ZZ$ and store $h^a g^b$ in a table until you get a collision. However, the space requirements for this method are too significant for the large groups used in modern cryptography. This idea can be combined with Pollard's rho method to produce a more practical algorithm---but first we need to address the elephant in the room: \textit{what if $|G|$ has small factors?}
 
-At first blush this seems like a big issue. If we take $G=\ZZ_p^*$ for some prime $p>2$, then $|G|=p-1$ always has even order, so our toy algorithm fails with high probability. Pollard originally used trial multiplication rather than inversion to solve the linear congruence, which is fairly efficient for most primes. We will use the Pohlig-Hellman algorithm, which allows us to solve a DLP in any group by first solving DLPs in its prime power order subgroups, and then reconstructing a solution to the original DLP via the Chinese Remainder Theorem \cite{Pohlig78}. The ``strong primes'' used in modern cryptography are picked so that $p-1$ has no small prime factors, so $a-a'$ is relatively prime to those prime power subgroup orders with high probability.
+At first blush this seems like a significant problem. If we take $G=\ZZ_p^*$ for some prime $p>2$, then $|G|=p-1$ always has even order and our toy algorithm fails with high probability. Pollard originally used trial multiplication rather than inversion to solve the linear congruence, which is fairly efficient for most primes and circumvents this problem. We will use the Pohlig-Hellman method, which allows us to solve a DLP in any group by first solving DLPs in its prime power order subgroups, and then reconstructing a solution to the original DLP via the Chinese Remainder Theorem \cite{Pohlig78}. The ``strong primes'' used in modern cryptography are picked so that $p-1$ has no small prime factors, so $a-a'$ is relatively prime to those prime power subgroup orders with high probability anyways.
 
 \subsection{$\ZZ_p^*$ DLPs}
 
@@ -106,13 +106,13 @@ Clearly $f$ is an iterating function, and $(y_k)$ is a walk in $\ZZ_p^*$ with $f
 
 \section{Teske's \textit{r-adding} and \textit{r+q-mixed} walks}
 
-Teske came up with new walks and proved both empirically and analytically that they perform better than Pollard's original walk \cite{Teske01}. The idea is essentially unsurprising: an iterating function with ``more rules'' ends up ``looking more random'' so we find a match in fewer steps. Walks without a squaring rule are called \textit{r-adding}; formally:
+Teske came up with new walks and proved both empirically and analytically that they perform better than Pollard's original walk \cite{Teske01}. The idea is intuitive: an iterating function with ``more rules'' ends up ``looking more random'' so we find a match in fewer steps. Walks without a squaring rule are called \textit{r-adding}.
 
 \begin{defn}
 	Let $G$ be a finite cyclic group, $r \in \NN$, and $m_1, \ldots, m_r \in G$. Furthermore, let $v: G \to \{1, 2, \ldots, r\}$ be a hash function and $f$ be an iterating function on $G$. A walk $(y_k)$ on $G$ with $f$ is called \textbf{$r$-adding} if $f$ is of the form $f(y) = y * m_{v(y)}$ for all $y \in G$.
 \end{defn}
 
-Teske also generalized Pollard's original walk as \textit{r+q-mixed walks}, which have both multiplication and squaring steps:
+Teske also generalized Pollard's original walk as \textit{r+q-mixed walks}, which have both multiplication and squaring rules:
 
 \begin{defn}
 	Let $G$ be a finite cyclic group, $r,q \in \NN$, and $m_1, \ldots, m_r \in G$. Furthermore, let $v: G \to \{1, \ldots, r+q\}$ be a hash function and $f$ be an iterating function on $G$. A walk $(y_k)$ on $G$ with $f$ is called \textbf{$r+q$-mixed} if $f$ is of the form:
@@ -136,7 +136,7 @@ $$v(y) = \begin{cases}
 \end{cases}.$$
 There is a subtlety of the manner in which a group $G$ is partitioned and the iterating function $f$ is designed in the case of $r+q$-mixed walks; if $e$ is the identity for $G$, then we would like $v(e) \in \{1,\ldots,r\}$ and $m_{v(e)} \neq e$, otherwise $f(e)=e^2=e$ and the walk becomes constant.
 
-Hash functions suitable for this application should be fast and produce a roughly even distribution, but do not need to be cryptographic. Examples include FNV32 and Murmur3.
+Hash functions suitable for this application should be fast and produce a roughly even distribution but do not need to be cryptographic. Examples include FNV32 and Murmur3.
 
 \section{Cycle-finding}
 
@@ -209,9 +209,9 @@ This yields the congruence $(0-14)x=(7-2) \pmod {15}$ and we solve for $x=5$. In
 
 \section{Experiments}
 
-We implemented a number of variations on Pollard's rho algorithm in C using the GNU Multiple Precision (\href{https://gmplib.org/}{https://gmplib.org/}) and Permuted Congruential Generator (\href{https://www.pcg-random.org/}{https://www.pcg-random.org/}) libraries for arbitrary-precision math and random number generation respectively. We tested each variation against prime-order subgroups of $\ZZ_p^*$ and groups of points of an elliptic curve over prime-order finite fields (denoted $E(\FF_p)$). For each type of group, we work with group orders between $10^{n-1}$ and $10^n$ for $3 \leq n \leq 13$. 
+We implemented Pollard's rho algorithm and these optimizations in C using the GNU Multiple Precision (\href{https://gmplib.org/}{https://gmplib.org/}) and Permuted Congruential Generator (\href{https://www.pcg-random.org/}{https://www.pcg-random.org/}) libraries for arbitrary-precision math and random number generation respectively. We tested each variation against prime-order subgroups of $\ZZ_p^*$ with orders between $10^{n-1}$ and $10^n$ for $3 \leq n \leq 13$. Our code is available on Github at \href{https://github.com/fharding1/pollard-rho}{https://github.com/fharding1/pollard-rho}.
 
-Teske showed that if the iterating function on a finite group $G$ behaves like a random mapping and her cycle-finding algorithm based on Schnorr and Lenstra's is used, then we expect a match in approximately $1.416\sqrt{|G|}$ iterations. Thus, she used the metric $$L := \frac{\text{\# of iterations until a cycle is found}}{\sqrt{|G|}}$$ to evaluate the performance of her walk functions experimentally. We will do the same. Our code is available on Github at \href{https://github.com/fharding1/pollard-rho}{https://github.com/fharding1/pollard-rho}.
+Teske showed that if the iterating function on a finite group $G$ behaves like a random mapping and her cycle-finding algorithm based on Schnorr and Lenstra's is used, then we expect a match in approximately $1.416\sqrt{|G|}$ iterations. Thus, she used the metric $$L := \frac{\text{\# of iterations until a cycle is found}}{\sqrt{|G|}}$$ to evaluate the performance of her walk functions experimentally. We will do the same.
 
 \subsection{Walk method}
 
@@ -266,7 +266,7 @@ We compared Pollard's original walk method to a Teske 20-adding walk with Floyd'
 
 \section{Conclusion}
 
-Pollard's rho algorithm is known to be one of the fastest and most practical algorithms for elliptic-curve DLPs, however contemporary implementations take advantage of numerous lesser-known optimizations. Teske came up with new methods of taking random walks in the group called $r$-adding and $r+q$-mixed walks. We implemented Pollard's rho algorithm in C and compared a $20$-adding walk with FNV32 hashing to Pollard's original rho algorithm, and showed that Teske's method is significantly faster. Future work would be to study the use of the negation map, other cycle-finding algorithms and hash functions, and the method of distinguished points.
+Pollard's rho algorithm is known to be one of the fastest and most practical algorithms for elliptic-curve DLPs, however contemporary implementations take advantage of numerous lesser-known optimizations. Teske came up with new methods of taking random walks in the group called $r$-adding and $r+q$-mixed walks. We implemented Pollard's rho algorithm in C and compared a $20$-adding walk with FNV32 hashing to Pollard's original rho algorithm, and showed empirically that Teske's method is significantly faster. Future work would be to study the use of the negation map, other cycle-finding algorithms and hash functions, and the method of distinguished points. It would also be informative to test these optimizations in elliptic-curve groups rather than only $\ZZ_p^*$.
 
 \printbibliography
 
